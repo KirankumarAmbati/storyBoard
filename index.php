@@ -92,8 +92,7 @@ if(isset($_POST['registerButton']))
 
       function logout()
       {
-        <?php session_destroy();
-        echo "alert(1)"; ?>
+        location.href='pages/logout.php'
       }
 
     </script>
@@ -105,7 +104,7 @@ if(isset($_POST['registerButton']))
     <a href="pages/login.php">Login</a>
     <?php } ?>
     <div class="">
-      <?php for($i=0;$i < count($data['stories']);$i++){ ?>
+      <?php for($i=0;$i < count($data['stories']);$i++){ echo count($data['stories'])?>
       <h1><?php echo $data['stories'][$i]['title'] ?></h1>
       <p><?php echo $data['stories'][$i]['story'] ?></p>
 

@@ -1,7 +1,6 @@
 <?php
 session_start();
 $data = $_SESSION['data'];
-echo $data;
 
 if(isset($_POST['addStoryButton']))
 {
