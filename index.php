@@ -1,7 +1,5 @@
 <?php
 session_start();
-echo session_cache_expire();
-echo session_save_path();
 
 $json_object = file_get_contents("data/stories.json");
 $_SESSION['data'] = json_decode($json_object, true);
@@ -13,16 +11,24 @@ $userdata = json_decode($json_object, true);
 if(isset($_POST['loginButton']))
 {
   echo 'Yess';
+  
 
   $email = $_POST['email'];
   $pwd = $_POST['pwd'];
 
+  echo $email;
+  echo $pwd;
+
   for($i=0;$i<count($userdata['users']);$i++)
   {
-    if($userdata['users'][$i]['email'] == $email &&  $userdata['users'][$i]['pwd'] == $pwd)
+    if($userdata['users'][$i]['email'] == $email &&  $userdata['users'][$i]['pwd'] == md5($pwd))
     {
       echo "Login successful.";
       $_SESSION['email'] = $email;
+      $_SESSION['firstName'] = $userdata['users'][$i]['firstName'];
+      $_SESSION['lastName'] = $userdata['users'][$i]['lastName'];
+
+      break;
     }
     else
     {
@@ -55,13 +61,15 @@ if(isset($_POST['registerButton']))
     $userdata['users'][$i]['firstName'] = $firstName;
     $userdata['users'][$i]['lastName'] = $lastName;
     $userdata['users'][$i]['email'] = $email;
-    $userdata['users'][$i]['pwd'] = $pwd;
+    $userdata['users'][$i]['pwd'] = md5($pwd);
 
-    echo "Registered !!!  ";
+    echo "Registered !!!  " ;
 
     file_put_contents("data/users.json", json_encode($userdata));
 
     $_SESSION['email'] = $email;
+    $_SESSION['firstName'] = $firstName;
+    $_SESSION['lastName'] = $lastName;
   }
   else {
     echo "Already registered !! ";
@@ -75,7 +83,18 @@ if(isset($_POST['registerButton']))
   <head>
     <meta charset="utf-8">
     <title>Story Board</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="css/animate.css"> -->
+
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+
+    <script src="js/jquery.js"></script>
+   <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.waypoints.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/modernizr/modernizr-2.7.2.js"></script>
+
     <script type="text/javascript">
+
       function addStoryFunction()
       {
         <?php
@@ -95,20 +114,94 @@ if(isset($_POST['registerButton']))
         location.href='pages/logout.php'
       }
 
+      function displayMyStories()
+      {
+        document.getElementById('allStories').style.display='none';
+        document.getElementById('myStories').style.display='block';
+      }
+
+      function displayAllStories()
+      {
+        document.getElementById('allStories').style.display='block';
+        document.getElementById('myStories').style.display='none';
+      }
+
+      function updateStory(x)
+      {
+        location.href = 'pages/updateStory.php?updateStory=' + x.id;
+      }
+
+      function deleteStory(x)
+      {
+        if(confirm('Are you sure ? '))
+        {
+          location.href = 'pages/deleteStory.php?deleteStory=' + x.id;
+        }
+      }
     </script>
   </head>
+
   <body>
     <a onclick="addStoryFunction()">Add Story</a>
-    <a onclick="logout()">Logout</a>
-    <?php if(!isset($_SESSION['email'])){ ?>
-    <a href="pages/login.php">Login</a>
-    <?php } ?>
-    <div class="">
-      <?php for($i=0;$i < count($data['stories']);$i++){ echo count($data['stories'])?>
-      <h1><?php echo $data['stories'][$i]['title'] ?></h1>
-      <p><?php echo $data['stories'][$i]['story'] ?></p>
 
+    <?php if(!isset($_SESSION['email'])){ ?>
+    <a class="btn btn-primary" href="pages/login.php">Login</a>
+    <?php } else{ ?>
+    <a onclick="logout()">Logout</a>
+    <a onclick="displayMyStories()">My Stories</a>
+    <a onclick="displayAllStories()">All Stories</a>
     <?php } ?>
+
+    <div id="allStories">
+
+      <?php for($i=0;$i < count($data['stories']);$i++){ echo count($data['stories'])?>
+      <div class="container well" id="story<?php echo $i; ?>">
+        <div class="col-sm-2">
+          <span class="h1"><?php echo $i+1 ?></span>
+        </div>
+
+        <div class="col-sm-9">
+          <span class="h1"><?php echo $data['stories'][$i]['title'] ?></span><br>
+          <span><?php echo $data['stories'][$i]['firstName']  ?>  <?php echo $data['stories'][$i]['lastName'] ?></span>
+
+          <span ><?php echo $data['stories'][$i]['date'] ?></span>
+
+          <p><?php echo $data['stories'][$i]['story'] ?></p>
+        </div>
+
+      </div>
+    <?php } ?>
+
+    </div>
+
+    <div id="myStories" style='display:none'>
+      <?php $k=0;
+      $myStories = array(); ?>
+      <?php for($j=0;$j < count($data['stories']);$j++){
+        if($data['stories'][$j]['email'] == $_SESSION['email']){
+      ?>
+      <div class="container well" id="story<?php echo $j; ?>">
+        <div class="col-sm-2">
+          <span class="h1"><?php echo $k+1 ?></span>
+        </div>
+
+        <div class="col-sm-9">
+          <span class="h1"><?php echo $data['stories'][$j]['title'] ?></span><br>
+
+          <span ><?php echo $data['stories'][$j]['date'] ?></span>
+
+          <p><?php echo $data['stories'][$j]['story'] ?></p>
+        </div>
+
+        <div class="">
+          <button type="button" name="button" onclick="updateStory(this)" id="<?php echo $j; ?>">UPDATE</button>
+
+          <button type="button" name="button" onclick="deleteStory(this)" id="<?php echo $j; ?>">DELETE</button>
+        </div>
+      </div>
+      <?php $k++;}} ?>
+
+      <?php $_SESSION['myStories'] = $myStories; ?>
     </div>
   </body>
 </html>
